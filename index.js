@@ -54,9 +54,9 @@ app.delete('/api/persons/:id', (req, res, next) => {
 app.post('/api/persons', (req, res, next) => {
     const body = req.body
 
-    if (!body.name || !body.number) {
-        return res.status(400).json({ error: 'name or number missing' })
-    }
+    //if (!body.name || !body.number) {
+    //    return res.status(400).json({ error: 'name or number missing' })
+    //}
 
     // Vérifie les doublons côté base de données
     Person.findOne({ name: body.name })
@@ -86,7 +86,7 @@ app.put('/api/persons/:id', (req, res, next) => {
     Person.findByIdAndUpdate(
         req.params.id,
         updatedPerson,
-        { new: true } // ← important pour valider
+        { new: true, runValidators: true, context: 'query' }
     )
         .then(updated => {
             res.json(updated)
@@ -99,6 +99,8 @@ const errorHandler = (error, request, response, next) => {
 
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
     }
 
     next(error)
